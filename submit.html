@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>Trang Gửi Bài - THPT Ngô Mây Confessions</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        header {
+            position: relative;
+            text-align: center;
+            max-width: 800px;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        /* Logo góc trên trái */
+        #logo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3);
+        }
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+        header p {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            max-width: 700px;
+            margin: 0 auto;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+        form {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            max-width: 700px;
+            width: 100%;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-sizing: border-box;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        .required-star {
+            color: #ff4d4d;
+            margin-left: 4px;
+        }
+        textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 150px;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-family: inherit;
+        }
+        textarea:focus {
+            box-shadow: 0 0 8px 2px #2575fc;
+        }
+        input[type="file"] {
+            margin-top: 8px;
+            color: #fff;
+        }
+        button {
+            margin-top: 15px;
+            background-color: #2575fc;
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+        }
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #1a54d1;
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 0.95rem;
+            color: #eee;
+            line-height: 1.4;
+            max-width: 700px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        /* Preview ảnh */
+        #imagePreview {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-start;
+        }
+        #imagePreview img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.3);
+        }
+        /* Hình ảnh khung viên trường dưới cùng */
+        #schoolImage {
+            margin-top: 40px;
+            max-width: 90vw;
+            max-height: 300px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img id="logo" src="https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-1/460023118_122191865348033592_7104832509521277266_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=103&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=4kbTeLI23ywQ7kNvwEE9sNH&_nc_oc=Admb7d0PqT_LG9gGQntqmUsuUjDAzvj-UIfyeS5mvUJw_PlrpcaeCZRttPF_kS98DKQ1ozvdeInejFJyWbN-fDS7&_nc_zt=24&_nc_ht=scontent.fdad3-6.fna&_nc_gid=P3x3E_rOl_-twsNOD74Obg&oh=00_AfYnM03xoVrQiUEilj8i6_odVuup4L9pXNb_-RRgcfDFcQ&oe=68C2C7BC" alt="Logo trường THPT Ngô Mây" />
+        <h1>THPT Ngô Mây Confessions</h1>
+        <p>
+            Cảm ơn các bạn đã ghé thăm trang THPT Ngô Mây Confessions.<br><br>
+            Đây là nơi để các bạn có thể chia sẻ với chúng mình những tâm tư tình cảm tuổi học trò, những kỷ niệm còn đọng lại mà các anh/chị/bạn trân quý nhất khi theo học tại trường THPT Ngô Mây.<br><br>
+            Chúng mình sẽ giúp bạn thực hiện và chắc chắn rằng không ai biết bạn là ai đâu kể cả chúng mình vì cfs của bạn sẽ được gửi đi dưới dạng ẨN DANH nên đừng ngại ngần gì cứ bung lụa đi nhé! Hãy chia sẻ với chúng mình và mọi người nha!<br><br>
+            <strong>Mục có dấu "<span class="required-star">*</span>" nghĩa là bắt buộc, còn hình ảnh thì không bắt buộc nhé các bạn.</strong>
+        </p>
+    </header>
+
+    <form id="submissionForm" novalidate>
+        <label for="confessionText">Lời nhắn <span class="required-star">*</span></label>
+        <textarea id="confessionText" name="confessionText" placeholder="Hãy viết lời thú tội của bạn ở đây..." required></textarea>
+
+        <label for="imageUpload" style="margin-top: 15px;">Tải lên hình ảnh (tối đa 5 ảnh, không bắt buộc)</label>
+        <input type="file" id="imageUpload" name="images" accept="image/*" multiple />
+
+        <div id="imagePreview"></div>
+
+        <button type="submit" disabled>Gửi</button>
+    </form>
+
+    <img id="schoolImage" src="https://lh7-rt.googleusercontent.com/formsz/AN7BsVBUx2Z21hkhI2NjLUdT8MJmJZFLtXhYRdGqnjaiDHfXOKMOfYqwCUS_UKwadlHh1XDcq44LrU7sEE_xVBmkE-1-Qrq8m3-2gROuClpEKEfxDyk27BAe4Ok_Gy5twjHL5sAWReHpiVxyZvBRYOlLZVyXntExXzVdjWiufNEPbQY7KYeFqfVLH6ItAuJq5LQUDxLn2FXS1lwzPVk=w740?key=5w55STN3I0N0vyxKqhHcJw" alt="Khung viên trường THPT Ngô Mây" />
+
+    <script>
+        const textarea = document.getElementById('confessionText');
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const form = document.getElementById('submissionForm');
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+
+        // Bật nút gửi khi textarea có nội dung
+        textarea.addEventListener('input', () => {
+            submitBtn.disabled = textarea.value.trim().length === 0;
+        });
+
+        // Giới hạn số ảnh tối đa 5 và preview ảnh
+        imageUpload.addEventListener('change', () => {
+            const files = Array.from(imageUpload.files);
+            if (files.length > 5) {
+                alert('Bạn chỉ được chọn tối đa 5 ảnh.');
+                imageUpload.value = ''; // reset
+                imagePreview.innerHTML = '';
+                return;
+            }
+            imagePreview.innerHTML = '';
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = 'Ảnh tải lên';
+                    imagePreview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(textarea.value.trim().length === 0) {
+                alert('Vui lòng nhập lời thú tội trước khi gửi.');
+                return;
+            }
+
+            // Lấy nội dung lời thú tội
+            const confessionText = textarea.value.trim();
+
+            // Lấy ảnh dưới dạng base64
+            const files = Array.from(imageUpload.files);
+            if (files.length > 5) {
+                alert('Bạn chỉ được gửi tối đa 5 ảnh.');
+                return;
+            }
+
+            // Đọc ảnh base64 đồng bộ bằng Promise
+            function readFileAsDataURL(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject('Lỗi đọc file');
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            Promise.all(files.map(readFileAsDataURL))
+                .then(imagesBase64 => {
+                    // Lưu confession và ảnh vào localStorage (demo)
+                    let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
+                    confessions.push({
+                        id: Date.now(),
+                        text: confessionText,
+                        images: imagesBase64, // mảng base64 ảnh
+                        date: new Date().toISOString()
+                    });
+                    localStorage.setItem('confessions', JSON.stringify(confessions));
+
+                    alert('Cảm ơn bạn đã gửi lời thú tội! Nó đã được lưu trữ ẩn danh.');
+
+                    // Reset form
+                    textarea.value = '';
+                    imageUpload.value = '';
+                    imagePreview.innerHTML = '';
+                    submitBtn.disabled = true;
+                })
+                .catch(err => {
+                    alert('Có lỗi xảy ra khi xử lý ảnh: ' + err);
+                });
+        });
+    </script>
+
+</body>
+</html>
