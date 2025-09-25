@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>Trang Admin - THPT Ngô Mây Confessions</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1, h2 {
+            text-align: center;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .confession-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .confession-meta {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+        .confession-text {
+            white-space: pre-wrap;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        .images-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .images-container img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.3);
+        }
+        button.delete-btn {
+            background-color: #e53e3e;
+            border: none;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        button.delete-btn:hover {
+            background-color: #9b2c2c;
+        }
+        #refreshBtn {
+            display: block;
+            margin: 20px auto 0 auto;
+            background-color: #38a169;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #refreshBtn:hover {
+            background-color: #276749;
+        }
+        @media (max-width: 600px) {
+            .images-container img {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Trang Admin - THPT Ngô Mây Confessions</h1>
+    <div class="container">
+        <h2>Danh sách Confessions</h2>
+        <div id="listContainer">
+            <p style="text-align:center; opacity:0.7;">Đang tải danh sách...</p>
+        </div>
+        <button id="refreshBtn">Làm mới danh sách</button>
+    </div>
+
+    <script>
+        const listContainer = document.getElementById('listContainer');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        function loadConfessions() {
+            const confessions = JSON.parse(localStorage.getItem('confessions')) || [];
+            listContainer.innerHTML = '';
+
+            if (confessions.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; opacity:0.7;">Chưa có confession nào được gửi.</p>';
+                return;
+            }
+
+            confessions.forEach(conf => {
+                const item = document.createElement('div');
+                item.className = 'confession-item';
+
+                let imagesHTML = '';
+                if (conf.images && Array.isArray(conf.images) && conf.images.length > 0) {
+                    imagesHTML = '<div class="images-container">';
+                    conf.images.forEach(src => {
+                        imagesHTML += `<img src="${src}" alt="Ảnh confession" loading="lazy" />`;
+                    });
+                    imagesHTML += '</div>';
+                }
+
+                item.innerHTML = `
+                    <div class="confession-meta">ID: ${conf.id} | Ngày gửi: ${new Date(conf.date).toLocaleString()}</div>
+                    <div class="confession-text">${escapeHtml(conf.text)}</div>
+                    ${imagesHTML}
+                    <button class="delete-btn" data-id="${conf.id}">Xóa</button>
+                `;
+
+                listContainer.appendChild(item);
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const id = e.target.dataset.id;
+                    if (confirm('Bạn có chắc muốn xóa confession này?')) {
+                        let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
+                        confessions = confessions.filter(c => c.id !== id);
+                        localStorage.setItem('confessions', JSON.stringify(confessions));
+                        loadConfessions();
+                    }
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        loadConfessions();
+
+        refreshBtn.addEventListener('click', loadConfessions);
+    </script>
+
+</body>
+</html>
