@@ -153,4 +153,118 @@
         <button type="submit" disabled>Gửi</button>
     </form>
 
-    <img id="schoolImage" src="https://lh7-rt.googleusercontent.com/formsz/AN7BsVBUx2Z21hkhI2NjLUdT8MJmJZFLtXhYRdGqnjaiDHfXOKMOfYqwCUS_UKwadlHh1XDcq44LrU7sEE_xVBmkE-1-Qrq8m3-2gROuClpEKEfxDyk27BAe4Ok_Gy5twjHL5sAWReHpiVxyZvBRYOlLZVyXntExXzVdjWiufNEPbQY7KYeFqfVLH6ItAuJq5LQUDxLn2FXS1lwzPVk=w740?key=5w55
+    <img id="schoolImage" src="https://lh7-rt.googleusercontent.com/formsz/AN7BsVBUx2Z21hkhI2NjLUdT8MJmJZFLtXhYRdGqnjaiDHfXOKMOfYqwCUS_UKwadlHh1XDcq44LrU7sEE_xVBmkE-1-Qrq8m3-2gROuClpEKEfxDyk27BAe4Ok_Gy5twjHL5sAWReHpiVxyZvBRYOlLZVyXntExXzVdjWiufNEPbQY7KYeFqfVLH6ItAuJq5LQUDxLn2FXS1lwzPVk=w740?key=5w55STN3I0N0vyxKqhHcJw" alt="Khung viên trường THPT Ngô Mây" />
+
+    <script>
+        const textarea = document.getElementById('confessionText');
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const form = document.getElementById('submissionForm');
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+
+        // Hàm renumber: Sắp xếp theo date tăng dần (cũ nhất cfs001), assign ID liên tục
+        function renumberConfessions(confessions) {
+            if (!confessions || confessions.length === 0) return [];
+            confessions.sort((a, b) => new Date(a.date) - new Date(b.date));
+            confessions.forEach((conf, index) => {
+                const newIdNumber = index + 1;
+                conf.id = 'cfs' + String(newIdNumber).padStart(3, '0');
+            });
+            return confessions;
+        }
+
+        textarea.addEventListener('input', () => {
+            submitBtn.disabled = textarea.value.trim().length === 0;
+        });
+
+        imageUpload.addEventListener('change', () => {
+            const files = Array.from(imageUpload.files);
+            if (files.length > 5) {
+                alert('Bạn chỉ được chọn tối đa 5 ảnh.');
+                imageUpload.value = '';
+                imagePreview.innerHTML = '';
+                return;
+            }
+            imagePreview.innerHTML = '';
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = 'Ảnh tải lên';
+                    imagePreview.appendChild(img);
+                };
+                reader.onerror = () => console.warn('Lỗi đọc preview ảnh:', file.name);
+                reader.readAsDataURL(file);
+            });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (textarea.value.trim().length === 0) {
+                alert('Vui lòng nhập lời nhắn trước khi gửi.');
+                return;
+            }
+
+            const confessionText = textarea.value.trim();
+            const files = Array.from(imageUpload.files);
+            if (files.length > 5) {
+                alert('Bạn chỉ được gửi tối đa 5 ảnh.');
+                return;
+            }
+
+            // Hàm đọc file ảnh với error handling
+            function readFileAsDataURL(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(new Error(`Lỗi đọc file ${file.name}`));
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            try {
+                // Sử dụng Promise.allSettled để xử lý lỗi từng ảnh riêng lẻ
+                const results = await Promise.allSettled(files.map(readFileAsDataURL));
+                const imagesBase64 = results
+                    .filter(result => result.status === 'fulfilled')
+                    .map(result => result.value);
+
+                console.log(`Đã đọc ${imagesBase64.length}/${files.length} ảnh thành công.`);
+
+                let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
+                
+                // Thêm confession mới với ID tạm
+                const tempId = 'temp' + Date.now();
+                confessions.push({
+                    id: tempId,
+                    text: confessionText,
+                    images: imagesBase64,
+                    date: new Date().toISOString()
+                });
+                
+                // Renumber toàn bộ
+                confessions = renumberConfessions(confessions);
+                
+                // Lưu vào localStorage
+                localStorage.setItem('confessions', JSON.stringify(confessions));
+                
+                console.log('Đã lưu confessions:', confessions); // Debug
+
+                alert('Cảm ơn bạn đã gửi lời nhắn! Nó đã được lưu trữ ẩn danh.');
+
+                // Reset form
+                textarea.value = '';
+                imageUpload.value = '';
+                imagePreview.innerHTML = '';
+                submitBtn.disabled = true;
+            } catch (err) {
+                alert('Có lỗi xảy ra: ' + err.message + '. Vui lòng thử lại (có thể do ảnh quá lớn).');
+                console.error('Lỗi gửi confession:', err);
+            }
+        });
+    </script>
+
+</body>
+</html>
