@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <title>Trang Admin - THPT Ngô Mây Confessions</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
@@ -97,27 +100,32 @@
 
     <h1>Trang Admin - THPT Ngô Mây Confessions</h1>
     <div class="container">
-        <h2>Danh sách Confessions</h2>
+        <h2>Danh sách Confessions (Real-time từ cộng đồng)</h2>
         <div id="listContainer">
-            <p style="text-align:center; opacity:0.7;">Đang tải danh sách...</p>
+            <p style="text-align:center; opacity:0.7;">Đang tải danh sách từ Firebase...</p>
         </div>
-        <button id="refreshBtn">Làm mới danh sách</button>
+        <button id="refreshBtn">Làm mới danh sách (Force Reload)</button>
     </div>
 
     <script>
+        // Thay YOUR_FIREBASE_CONFIG bằng config thật từ Firebase Console (giống submission.html)
+        const firebaseConfig = {
+            // Ví dụ (thay bằng của bạn):
+            // apiKey: "your-api-key",
+            // authDomain: "your-project.firebaseapp.com",
+            // projectId: "your-project-id",
+            // storageBucket: "your-project.appspot.com",
+            // messagingSenderId: "123456789",
+            // appId: "your-app-id"
+        };
+
+        // Khởi tạo Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const listContainer = document.getElementById('listContainer');
         const refreshBtn = document.getElementById('refreshBtn');
-
-        // Hàm renumber: Sắp xếp theo date tăng dần (cũ nhất cfs001), assign ID liên tục
-        function renumberConfessions(confessions) {
-            if (!confessions || confessions.length === 0) return [];
-            confessions.sort((a, b) => new Date(a.date) - new Date(b.date));
-            confessions.forEach((conf, index) => {
-                const newIdNumber = index + 1;
-                conf.id = 'cfs' + String(newIdNumber).padStart(3, '0');
-            });
-            return confessions;
-        }
+        let unsubscribeListener; // Để detach real-time listener
 
         // Hàm escape HTML để tránh XSS
         function escapeHtml(text) {
@@ -126,29 +134,44 @@
             return div.innerHTML;
         }
 
-        // Hàm load và hiển thị confessions (sắp xếp mới nhất trước)
-        function loadConfessions() {
-            let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
-            
-            // Log để debug
-            console.log('Data từ localStorage:', confessions);
-            
-            // Renumber để đảm bảo ID liên tục
-            confessions = renumberConfessions(confessions);
-            localStorage.setItem('confessions', JSON.stringify(confessions)); // Lưu lại
+        // Hàm renumber: Sắp xếp theo createdAt tăng dần, assign ID cfs001... (trả về array mới)
+        function renumberConfessions(confessions) {
+            if (!confessions || confessions.length === 0) return [];
+            // Sắp xếp theo createdAt tăng dần (cũ nhất trước)
+            const sorted = confessions.sort((a, b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0));
+            sorted.forEach((conf, index) => {
+                conf.id = 'cfs' + String(index + 1).padStart(3, '0');
+            });
+            return sorted;
+        }
 
+        // Hàm cập nhật ID cho tất cả documents trong Firestore (sử dụng batch để hiệu quả)
+        async function updateAllIds(confessions) {
+            const batch = db.batch();
+            confessions.forEach(conf => {
+                const docRef = db.collection('confessions').doc(conf.docId); // docId là ID document
+                batch.update(docRef, { id: conf.id });
+            });
+            await batch.commit();
+            console.log('Đã cập nhật ID cho tất cả confessions.');
+        }
+
+        // Hàm hiển thị danh sách (sắp xếp mới nhất trước)
+        function displayConfessions(confessions) {
             listContainer.innerHTML = '';
 
             if (confessions.length === 0) {
-                listContainer.innerHTML = '<p style="text-align:center; opacity:0.7;">Chưa có confession nào được gửi.</p>';
-                console.log('Không có data!');
+                listContainer.innerHTML = '<p style="text-align:center; opacity:0.7;">Chưa có confession nào được gửi từ cộng đồng.</p>';
                 return;
             }
 
-            // Sắp xếp theo ngày gửi giảm dần (mới nhất trước) để hiển thị
-            const sortedConfessions = [...confessions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Renumber để đảm bảo ID liên tục (dựa trên thời gian)
+            const renumbered = renumberConfessions(confessions);
 
-            sortedConfessions.forEach(conf => {
+            // Sắp xếp theo createdAt giảm dần (mới nhất trước) để hiển thị
+            const sortedForDisplay = [...renumbered].sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+
+            sortedForDisplay.forEach(conf => {
                 const item = document.createElement('div');
                 item.className = 'confession-item';
 
@@ -162,43 +185,102 @@
                 }
 
                 item.innerHTML = `
-                    <div class="confession-meta">ID: ${escapeHtml(conf.id)} | Ngày gửi: ${new Date(conf.date).toLocaleString('vi-VN')}</div>
+                    <div class="confession-meta">ID: ${escapeHtml(conf.id)} | Ngày gửi: ${conf.createdAt ? conf.createdAt.toDate().toLocaleString('vi-VN') : 'N/A'}</div>
                     <div class="confession-text">${escapeHtml(conf.text)}</div>
                     ${imagesHTML}
-                    <button class="delete-btn" data-id="${escapeHtml(conf.id)}">Xóa</button>
+                    <button class="delete-btn" data-docid="${conf.docId}">Xóa</button>
                 `;
 
                 listContainer.appendChild(item);
             });
 
-            // Thêm event listener cho nút xóa (sau khi render)
+            // Thêm event listener cho nút xóa
             document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    const idToDelete = e.target.dataset.id;
+                btn.addEventListener('click', async (e) => {
+                    const docIdToDelete = e.target.dataset.docid;
                     if (confirm('Bạn có chắc muốn xóa confession này?')) {
-                        let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
-                        // Lọc xóa theo ID
-                        confessions = confessions.filter(c => c.id !== idToDelete);
-                        // Renumber sau xóa
-                        confessions = renumberConfessions(confessions);
-                        // Lưu lại
-                        localStorage.setItem('confessions', JSON.stringify(confessions));
-                        
-                        console.log('Sau xóa:', confessions); // Log debug
-                        
-                        alert('Đã xóa và renumber ID thành công!');
-                        // Reload danh sách
-                        loadConfessions();
+                        try {
+                            // Xóa document
+                            await db.collection('confessions').doc(docIdToDelete).delete();
+                            console.log('Đã xóa confession:', docIdToDelete);
+                            alert('Đã xóa confession thành công! Đang renumber ID...');
+                            // Listener sẽ tự update danh sách và renumber
+                        } catch (err) {
+                            alert('Lỗi khi xóa: ' + err.message);
+                            console.error('Lỗi xóa:', err);
+                        }
                     }
                 });
             });
+
+            console.log('Đã hiển thị', confessions.length, 'confessions (renumbered).');
+        }
+
+        // Hàm load confessions từ Firestore (real-time listener)
+        function loadConfessions() {
+            // Detach listener cũ nếu có
+            if (unsubscribeListener) {
+                unsubscribeListener();
+            }
+
+            listContainer.innerHTML = '<p style="text-align:center; opacity:0.7;">Đang tải danh sách...</p>';
+
+            // Real-time listener: Theo dõi thay đổi collection
+            unsubscribeListener = db.collection('confessions')
+                .orderBy('createdAt', 'desc') // Mới nhất trước
+                .onSnapshot(async (snapshot) => {
+                    const confessions = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        data.docId = doc.id; // Lưu ID document để xóa/renumber
+                        confessions.push(data);
+                    });
+
+                    console.log('Data real-time từ Firestore:', confessions);
+
+                    if (confessions.length === 0) {
+                        displayConfessions([]);
+                        return;
+                    }
+
+                    // Renumber sau khi fetch (và cập nhật Firestore nếu cần)
+                    const renumbered = renumberConfessions(confessions);
+                    // Kiểm tra nếu ID thay đổi, cập nhật Firestore (chỉ khi load ban đầu hoặc sau xóa)
+                    let needsUpdate = false;
+                    renumbered.forEach(conf => {
+                        if (conf.id !== confessions.find(c => c.docId === conf.docId)?.id) {
+                            needsUpdate = true;
+                        }
+                    });
+                    if (needsUpdate) {
+                        await updateAllIds(renumbered);
+                    }
+
+                    displayConfessions(renumbered);
+                }, (err) => {
+                    console.error('Lỗi listener:', err);
+                    listContainer.innerHTML = '<p style="text-align:center; color: #ff6b6b;">Lỗi tải dữ liệu: ' + err.message + '</p>';
+                });
         }
 
         // Load ban đầu
         loadConfessions();
 
-        // Event cho nút refresh
-        refreshBtn.addEventListener('click', loadConfessions);
+        // Event cho nút refresh (force reload)
+        refreshBtn.addEventListener('click', () => {
+            if (unsubscribeListener) {
+                unsubscribeListener(); // Detach
+            }
+            loadConfessions(); // Re-attach
+            alert('Đã làm mới danh sách!');
+        });
+
+        // Cleanup khi đóng trang
+        window.addEventListener('beforeunload', () => {
+            if (unsubscribeListener) {
+                unsubscribeListener();
+            }
+        });
     </script>
 
 </body>
