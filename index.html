@@ -23,7 +23,6 @@
             margin-bottom: 30px;
             width: 100%;
         }
-        /* Logo góc trên trái */
         #logo {
             position: absolute;
             top: 0;
@@ -114,7 +113,6 @@
             text-align: center;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
-        /* Preview ảnh */
         #imagePreview {
             margin-top: 15px;
             display: flex;
@@ -129,7 +127,6 @@
             border-radius: 8px;
             box-shadow: 0 0 6px rgba(0,0,0,0.3);
         }
-        /* Hình ảnh khung viên trường dưới cùng */
         #schoolImage {
             margin-top: 40px;
             max-width: 90vw;
@@ -143,7 +140,7 @@
 <body>
 
     <header>
-        <img id="logo" src="https://scontent.fhan5-7.fna.fbcdn.net/v/t39.30808-6/460023118_122191865348033592_7104832509521277266_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFtn7XYP_bZGUZGwIfXTCbcqfBpfAht2rWp8Gl8CG3atahPjNB4VWkF0BVIb9Y3ssZNZrcWCTC4ObKYCAEZkHbj&_nc_ohc=85fr1FFAF3EQ7kNvwEkRHUs&_nc_oc=AdlouVEg3dBZyepdpp7eJJkejzp5LSD4tgUadgmmE4CJ-iXwEZ_u_JvYjcyvpb1xOfy_PPHH5Z7HgEo_aCcUSpBv&_nc_zt=23&_nc_ht=scontent.fhan5-7.fna&_nc_gid=CCyGOuK606iQD75cWlNoFQ&oh=00_AfYcOluqNH2Vt6ECpL6oRgPzkrSTID8jEiKi0q9X9fZC2w&oe=68DB1C9F" alt="Logo trường THPT Ngô Mây" />
+        <img id="logo" src="https://scontent.fsgn5-7.fna.fbcdn.net/v/t39.30808-6/460023118_122191865348033592_7104832509521277266_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFtn7XYP_bZGUZGwIfXTCbcqfBpfAht2rWp8Gl8CG3atahPjNB4VWkF0BVIb9Y3ssZNZrcWCTC4ObKYCAEZkHbj&_nc_ohc=-4BF1CyzmZgQ7kNvwHVNixC&_nc_oc=Adnma6pFfV0JHmBWWEeUnbdKDjBtpDuNICZ_LYg4yBPlnsDJE3PT0ben0H8CkIZgh9OkSTZWxN-8f8GFX1oz-CCR&_nc_zt=23&_nc_ht=scontent.fsgn5-7.fna&_nc_gid=toTvkpTL2GqRA436Sz5Dbg&oh=00_AfbSRlPitHtOmKfQM3YNkwdvDfl372cau-ZAGYYECBJJzQ&oe=68DF111F" alt="Logo trường THPT Ngô Mây" />
         <h1>THPT Ngô Mây Confessions</h1>
         <p>
             Cảm ơn các bạn đã ghé thăm trang THPT Ngô Mây Confessions.<br><br>
@@ -155,7 +152,7 @@
 
     <form id="submissionForm" novalidate>
         <label for="confessionText">Lời nhắn <span class="required-star">*</span></label>
-        <textarea id="confessionText" name="confessionText" placeholder="Hãy viết lời nhắn của bạn ở đây..." required></textarea>
+        <textarea id="confessionText" name="confessionText" placeholder="Hãy viết lời thú tội của bạn ở đây..." required></textarea>
 
         <label for="imageUpload" style="margin-top: 15px;">Tải lên hình ảnh (tối đa 5 ảnh, không bắt buộc)</label>
         <input type="file" id="imageUpload" name="images" accept="image/*" multiple />
@@ -174,17 +171,15 @@
         const imageUpload = document.getElementById('imageUpload');
         const imagePreview = document.getElementById('imagePreview');
 
-        // Bật nút gửi khi textarea có nội dung
         textarea.addEventListener('input', () => {
             submitBtn.disabled = textarea.value.trim().length === 0;
         });
 
-        // Giới hạn số ảnh tối đa 5 và preview ảnh
         imageUpload.addEventListener('change', () => {
             const files = Array.from(imageUpload.files);
             if (files.length > 5) {
                 alert('Bạn chỉ được chọn tối đa 5 ảnh.');
-                imageUpload.value = ''; // reset
+                imageUpload.value = '';
                 imagePreview.innerHTML = '';
                 return;
             }
@@ -205,21 +200,17 @@
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if(textarea.value.trim().length === 0) {
-                alert('Vui lòng nhập lời thú tội trước khi gửi.');
+                alert('Vui lòng nhập lời nhắn trước khi gửi.');
                 return;
             }
 
-            // Lấy nội dung lời thú tội
             const confessionText = textarea.value.trim();
-
-            // Lấy ảnh dưới dạng base64
             const files = Array.from(imageUpload.files);
             if (files.length > 5) {
                 alert('Bạn chỉ được gửi tối đa 5 ảnh.');
                 return;
             }
 
-            // Đọc ảnh base64 đồng bộ bằng Promise
             function readFileAsDataURL(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -231,19 +222,20 @@
 
             Promise.all(files.map(readFileAsDataURL))
                 .then(imagesBase64 => {
-                    // Lưu confession và ảnh vào localStorage (demo)
                     let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
+                    const nextIdNumber = confessions.length + 1;
+                    const nextId = 'cfs' + String(nextIdNumber).padStart(3, '0');
+
                     confessions.push({
-                        id: Date.now(),
+                        id: nextId,
                         text: confessionText,
-                        images: imagesBase64, // mảng base64 ảnh
+                        images: imagesBase64,
                         date: new Date().toISOString()
                     });
                     localStorage.setItem('confessions', JSON.stringify(confessions));
 
                     alert('Cảm ơn bạn đã gửi lời nhắn! Nó đã được lưu trữ ẩn danh.');
 
-                    // Reset form
                     textarea.value = '';
                     imageUpload.value = '';
                     imagePreview.innerHTML = '';
@@ -257,6 +249,3 @@
 
 </body>
 </html>
-
-
-
