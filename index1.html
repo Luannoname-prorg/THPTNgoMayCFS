@@ -108,32 +108,40 @@
         const listContainer = document.getElementById('listContainer');
         const refreshBtn = document.getElementById('refreshBtn');
 
-        // Hàm renumber ID sau khi thay đổi danh sách (sắp xếp theo date tăng dần, rồi assign ID từ cfs001)
+        // Hàm renumber: Sắp xếp theo date tăng dần (cũ nhất cfs001), assign ID liên tục
         function renumberConfessions(confessions) {
-            // Sắp xếp theo ngày gửi tăng dần (cũ nhất trước)
+            if (!confessions || confessions.length === 0) return [];
             confessions.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            // Renumber ID từ cfs001 đến cfsNNN
             confessions.forEach((conf, index) => {
                 const newIdNumber = index + 1;
                 conf.id = 'cfs' + String(newIdNumber).padStart(3, '0');
             });
-            
             return confessions;
         }
 
-        // Hàm load và hiển thị confessions (sắp xếp mới nhất trước để dễ thấy cái mới)
+        // Hàm escape HTML để tránh XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Hàm load và hiển thị confessions (sắp xếp mới nhất trước)
         function loadConfessions() {
             let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
             
-            // Renumber để đảm bảo ID liên tục (dù không xóa, phòng trường hợp từ trang gửi)
+            // Log để debug
+            console.log('Data từ localStorage:', confessions);
+            
+            // Renumber để đảm bảo ID liên tục
             confessions = renumberConfessions(confessions);
-            localStorage.setItem('confessions', JSON.stringify(confessions)); // Lưu lại sau renumber
+            localStorage.setItem('confessions', JSON.stringify(confessions)); // Lưu lại
 
             listContainer.innerHTML = '';
 
             if (confessions.length === 0) {
                 listContainer.innerHTML = '<p style="text-align:center; opacity:0.7;">Chưa có confession nào được gửi.</p>';
+                console.log('Không có data!');
                 return;
             }
 
@@ -148,16 +156,16 @@
                 if (conf.images && Array.isArray(conf.images) && conf.images.length > 0) {
                     imagesHTML = '<div class="images-container">';
                     conf.images.forEach(src => {
-                        imagesHTML += `<img src="${src}" alt="Ảnh confession" loading="lazy" />`;
+                        imagesHTML += `<img src="${src}" alt="Ảnh confession" loading="lazy" onerror="this.style.display='none'" />`;
                     });
                     imagesHTML += '</div>';
                 }
 
                 item.innerHTML = `
-                    <div class="confession-meta">ID: ${conf.id} | Ngày gửi: ${new Date(conf.date).toLocaleString()}</div>
+                    <div class="confession-meta">ID: ${escapeHtml(conf.id)} | Ngày gửi: ${new Date(conf.date).toLocaleString('vi-VN')}</div>
                     <div class="confession-text">${escapeHtml(conf.text)}</div>
                     ${imagesHTML}
-                    <button class="delete-btn" data-id="${conf.id}">Xóa</button>
+                    <button class="delete-btn" data-id="${escapeHtml(conf.id)}">Xóa</button>
                 `;
 
                 listContainer.appendChild(item);
@@ -176,18 +184,14 @@
                         // Lưu lại
                         localStorage.setItem('confessions', JSON.stringify(confessions));
                         
+                        console.log('Sau xóa:', confessions); // Log debug
+                        
                         alert('Đã xóa và renumber ID thành công!');
                         // Reload danh sách
                         loadConfessions();
                     }
                 });
             });
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
 
         // Load ban đầu
