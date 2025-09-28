@@ -108,8 +108,28 @@
         const listContainer = document.getElementById('listContainer');
         const refreshBtn = document.getElementById('refreshBtn');
 
+        // Hàm renumber ID sau khi thay đổi danh sách (sắp xếp theo date tăng dần, rồi assign ID từ cfs001)
+        function renumberConfessions(confessions) {
+            // Sắp xếp theo ngày gửi tăng dần (cũ nhất trước)
+            confessions.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Renumber ID từ cfs001 đến cfsNNN
+            confessions.forEach((conf, index) => {
+                const newIdNumber = index + 1;
+                conf.id = 'cfs' + String(newIdNumber).padStart(3, '0');
+            });
+            
+            return confessions;
+        }
+
+        // Hàm load và hiển thị confessions (sắp xếp mới nhất trước để dễ thấy cái mới)
         function loadConfessions() {
-            const confessions = JSON.parse(localStorage.getItem('confessions')) || [];
+            let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
+            
+            // Renumber để đảm bảo ID liên tục (dù không xóa, phòng trường hợp từ trang gửi)
+            confessions = renumberConfessions(confessions);
+            localStorage.setItem('confessions', JSON.stringify(confessions)); // Lưu lại sau renumber
+
             listContainer.innerHTML = '';
 
             if (confessions.length === 0) {
@@ -117,7 +137,10 @@
                 return;
             }
 
-            confessions.forEach(conf => {
+            // Sắp xếp theo ngày gửi giảm dần (mới nhất trước) để hiển thị
+            const sortedConfessions = [...confessions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedConfessions.forEach(conf => {
                 const item = document.createElement('div');
                 item.className = 'confession-item';
 
@@ -140,13 +163,21 @@
                 listContainer.appendChild(item);
             });
 
+            // Thêm event listener cho nút xóa (sau khi render)
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', e => {
-                    const id = e.target.dataset.id;
+                    const idToDelete = e.target.dataset.id;
                     if (confirm('Bạn có chắc muốn xóa confession này?')) {
                         let confessions = JSON.parse(localStorage.getItem('confessions')) || [];
-                        confessions = confessions.filter(c => c.id !== id);
+                        // Lọc xóa theo ID
+                        confessions = confessions.filter(c => c.id !== idToDelete);
+                        // Renumber sau xóa
+                        confessions = renumberConfessions(confessions);
+                        // Lưu lại
                         localStorage.setItem('confessions', JSON.stringify(confessions));
+                        
+                        alert('Đã xóa và renumber ID thành công!');
+                        // Reload danh sách
                         loadConfessions();
                     }
                 });
@@ -159,12 +190,12 @@
             return div.innerHTML;
         }
 
+        // Load ban đầu
         loadConfessions();
 
+        // Event cho nút refresh
         refreshBtn.addEventListener('click', loadConfessions);
     </script>
 
 </body>
-
 </html>
-
